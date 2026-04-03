@@ -1,5 +1,6 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "https://phishing-backend.onrender.com"
+).replace(/\/$/, "");
 
 /**
  * Get token from both localStorage and sessionStorage
@@ -103,16 +104,18 @@ export async function loginUser(data: {
   email: string;
   password: string;
 }) {
-  // DEMO MODE: Instantly return successful authentication to bypass backend routing issues
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        status: "success",
-        token: "demo.token.bypass",
-        user: { email: data.email, full_name: "Admin Operator" }
-      });
-    }, 800);
+  const payload = {
+    email: data.email.trim().toLowerCase(),
+    password: data.password.trim(),
+  };
+
+  const response = await fetch(`${API_BASE_URL}/login`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
   });
+
+  return handleResponse(response);
 }
 
 export async function resendOtp(data: { email: string }) {
@@ -147,25 +150,21 @@ export async function getCurrentUser() {
 ============================ */
 
 export async function scanUrl(data: { url: string }) {
-  // DEMO MODE: Simulate realistic backend scanning response for the "Full Scan" button
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const isSus = data.url.toLowerCase().includes("suspicious") || data.url.toLowerCase().includes("malicious");
-      resolve({
-        status: "success",
-        verdict: isSus ? "Malicious" : "Safe",
-        score: isSus ? "92" : "14",
-        url: data.url,
-        reasons: isSus 
-           ? ["Phishing signature matched", "Blacklisted domain", "Suspicious redirects"]
-           : ["Domain established", "Safe Browsing checks passed"]
-      });
-    }, 1500);
+  const payload = {
+    url: data.url.trim(),
+  };
+
+  const response = await fetch(`${API_BASE_URL}/scan`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
   });
+
+  return handleResponse(response);
 }
 
 /* Quick ML check fallback:
-   reuses /scan-url because backend has no /check-url route */
+   reuses main scan route if separate route does not exist */
 export async function checkUrl(data: { url: string }) {
   return scanUrl(data);
 }
@@ -179,6 +178,10 @@ export async function detectUrl(data: { url: string }) {
 ============================ */
 
 export async function getScanHistory(): Promise<any> {
-  // DEMO MODE: Avoid triggering unauthorized history crashes when entering dashboard
-  return { status: "success", history: [] };
+  const response = await fetch(`${API_BASE_URL}/history`, {
+    method: "GET",
+    headers: getAuthHeaders(false),
+  });
+
+  return handleResponse(response);
 }
