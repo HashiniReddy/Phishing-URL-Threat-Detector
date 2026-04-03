@@ -1,36 +1,37 @@
 import { Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 
 type ProtectedRouteProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 const isTokenExpired = (token: string) => {
   try {
     if (!token.includes(".")) return false;
+
     const payload = JSON.parse(atob(token.split(".")[1]));
     if (!payload || !payload.exp) return false;
-    const expiry = payload.exp * 1000; // convert to ms
-    return Date.now() > expiry;
+
+    return Date.now() > payload.exp * 1000;
   } catch {
-    return false; // Trust opaque tokens until the backend rejects with 401
+    return false;
   }
 };
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  // ❌ No token
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // ❌ Expired token
   if (isTokenExpired(token)) {
     localStorage.clear();
+    sessionStorage.clear();
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Valid token
   return <>{children}</>;
 };
 
