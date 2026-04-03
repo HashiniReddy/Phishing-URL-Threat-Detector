@@ -1,7 +1,7 @@
 import { Component, ErrorInfo } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/protectedRoute";
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: ReactNode}) {
